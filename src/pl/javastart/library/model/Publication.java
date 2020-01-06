@@ -3,6 +3,7 @@ package pl.javastart.library.model;
 import java.util.Objects;
 
 public class Publication {
+    //
     private int year;
     private String title;
     private String publisher;
