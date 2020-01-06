@@ -6,7 +6,6 @@ public class Publication {
     private int year;
     private String title;
     private String publisher;
-//
     public Publication(String title, String publisher, int year) {
         this.title = title;
         this.publisher = publisher;
@@ -51,7 +50,6 @@ public class Publication {
                 Objects.equals(title, that.title) &&
                 Objects.equals(publisher, that.publisher);
     }
-
     @Override
     public int hashCode() {
         return Objects.hash(year, title, publisher);
