@@ -29,7 +29,12 @@ public enum Option {
 
     }
 
-    static Option createFromInt(int option){
-        return Option.values()[option];
+    static Option createFromInt(int option) throws NoSuchFieldException {
+        try {
+            return Option.values()[option];
+        }catch(ArrayIndexOutOfBoundsException e)
+        {
+            throw new NoSuchFieldException("Brak opcji o id " + option);
+        }
     }
 }

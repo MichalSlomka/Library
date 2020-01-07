@@ -1,9 +1,13 @@
 package pl.javastart.library.app;
 
+import pl.javastart.library.io.ConsolePrinter;
 import pl.javastart.library.io.DataReader;
 import pl.javastart.library.model.Book;
 import pl.javastart.library.model.Library;
 import pl.javastart.library.model.Magazine;
+import pl.javastart.library.model.Publication;
+
+import java.util.InputMismatchException;
 
 public class LibraryControl {
     private static final int EXIT = 0;
@@ -12,7 +16,8 @@ public class LibraryControl {
     private static final int PRINT_BOOKS = 3;
     private static final int PRINT_MAGAZINES = 4;
 
-    private DataReader dataReader = new DataReader();
+    private ConsolePrinter printer = new ConsolePrinter();
+    private DataReader dataReader = new DataReader(printer);
     private Library library = new Library();
 
     public void controlLoop() {
@@ -20,12 +25,13 @@ public class LibraryControl {
 
         do {
             printOptions();
-            option = Option.createFromInt(dataReader.getInt());
+            option = getOption();
+
             switch (option) {
                 case ADD_BOOK:
                     addBook();
                     break;
-                    case ADD_MAGAZINE:
+                case ADD_MAGAZINE:
                     addMagazine();
                     break;
                 case PRINT_BOOKS:
@@ -38,39 +44,69 @@ public class LibraryControl {
                     exit();
                     break;
                 default:
-                    System.out.println("Nie ma takiej opcji");
+                    printer.printLine("Nie ma takiej opcji");
             }
         } while (option != Option.EXIT);
     }
 
+    private Option getOption() {
+        boolean optionOk = false;
+        Option option = null;
+        while (!optionOk) {
+            try {
+                option = Option.createFromInt(dataReader.getInt());
+                optionOk = true;
+            } catch (NoSuchFieldException e) {
+                printer.printLine(e.getMessage());
+            }catch(InputMismatchException e){
+                printer.printLine("wprowadzona wartość nie jest liczbą");
+            }
+        }
+        return option;
+    }
+
     private void printMagazines() {
-        library.printMagazines();
+        Publication[] publications = library.getPublications();
+        printer.printMagazines(publications);
     }
 
     private void addMagazine() {
-        Magazine magazine = dataReader.readAndCreateMagazine();
-        library.addMagazine(magazine);
+        try {
+            Magazine magazine = dataReader.readAndCreateMagazine();
+            library.addMagazine(magazine);
+        }catch (InputMismatchException e){
+            printer.printLine("Nie udało się utworzyć magazynu, niepoprawne dane");
+        }catch (ArrayIndexOutOfBoundsException e){
+            printer.printLine("Osiągnięto limit pojemności magazynu");
+        }
     }
 
     private void exit() {
-        System.out.println("Koniec programu, papa");
+        printer.printLine("Koniec programu, papa");
         dataReader.close();
     }
 
     private void printBooks() {
-        library.printBooks();
+        Publication[] publications = library.getPublications();
+        printer.printBooks(publications);
     }
 
     private void addBook() {
-        Book book = dataReader.readAndCreateBook();
-        library.addBook(book);
+        try {
+            Book book = dataReader.readAndCreateBook();
+            library.addBook(book);
+        }catch (InputMismatchException e){
+            printer.printLine("Nie udało się utworzyć ksiażki, niepoprawne dane");
+        }catch (ArrayIndexOutOfBoundsException e){
+            printer.printLine("Osiągnięto limit pojemności magazynu");
+        }
     }
 
     private void printOptions() {
-        System.out.println("Wybierz opcję:");
+        printer.printLine("Wybierz opcję:");
         Option[] options = Option.values();
         for (Option option : options) {
-            System.out.println(option);
+            printer.printLine(option.toString());
         }
     }
 }
