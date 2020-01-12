@@ -1,7 +1,7 @@
 package pl.javastart.library.app;
 
 public class LibraryApp {
-    final static String APP_NAME = "Biblioteka v1.5";
+    final static String APP_NAME = "Biblioteka v1.6";
 
     //qwerty
     //123
