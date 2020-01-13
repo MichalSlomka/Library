@@ -1,7 +1,12 @@
 package pl.javastart.library.app;
 
+import pl.javastart.library.exception.DataExportException;
+import pl.javastart.library.exception.DataImportException;
+import pl.javastart.library.exception.InvalidDataException;
 import pl.javastart.library.io.ConsolePrinter;
 import pl.javastart.library.io.DataReader;
+import pl.javastart.library.io.file.FileManager;
+import pl.javastart.library.io.file.FileManagerBuilder;
 import pl.javastart.library.model.Book;
 import pl.javastart.library.model.Library;
 import pl.javastart.library.model.Magazine;
@@ -18,9 +23,24 @@ public class LibraryControl {
 
     private ConsolePrinter printer = new ConsolePrinter();
     private DataReader dataReader = new DataReader(printer);
-    private Library library = new Library();
+    private FileManager fileManager;
 
-    public void controlLoop() {
+    private Library library;
+
+    LibraryControl() {
+        fileManager = new FileManagerBuilder(printer, dataReader).build();
+        try {
+            library = fileManager.importData();
+            printer.printLine("Zaimportowane dane z pliku");
+        } catch (DataImportException | InvalidDataException e) {
+            printer.printLine(e.getMessage());
+            printer.printLine("Zainicjowano nową bazę.");
+            library = new Library();
+        }
+    }
+
+
+    void controlLoop() {
         Option option;
 
         do {
@@ -58,7 +78,7 @@ public class LibraryControl {
                 optionOk = true;
             } catch (NoSuchFieldException e) {
                 printer.printLine(e.getMessage());
-            }catch(InputMismatchException e){
+            } catch (InputMismatchException e) {
                 printer.printLine("wprowadzona wartość nie jest liczbą");
             }
         }
@@ -73,15 +93,21 @@ public class LibraryControl {
     private void addMagazine() {
         try {
             Magazine magazine = dataReader.readAndCreateMagazine();
-            library.addMagazine(magazine);
-        }catch (InputMismatchException e){
+            library.addPublication(magazine);
+        } catch (InputMismatchException e) {
             printer.printLine("Nie udało się utworzyć magazynu, niepoprawne dane");
-        }catch (ArrayIndexOutOfBoundsException e){
+        } catch (ArrayIndexOutOfBoundsException e) {
             printer.printLine("Osiągnięto limit pojemności magazynu");
         }
     }
 
     private void exit() {
+        try {
+            fileManager.exportData(library);
+            printer.printLine("Export danych zakończony powodzeniem");
+        } catch (DataExportException e){
+            printer.printLine(e.getMessage());
+        }
         printer.printLine("Koniec programu, papa");
         dataReader.close();
     }
@@ -94,10 +120,10 @@ public class LibraryControl {
     private void addBook() {
         try {
             Book book = dataReader.readAndCreateBook();
-            library.addBook(book);
-        }catch (InputMismatchException e){
+            library.addPublication(book);
+        } catch (InputMismatchException e) {
             printer.printLine("Nie udało się utworzyć ksiażki, niepoprawne dane");
-        }catch (ArrayIndexOutOfBoundsException e){
+        } catch (ArrayIndexOutOfBoundsException e) {
             printer.printLine("Osiągnięto limit pojemności magazynu");
         }
     }
@@ -111,11 +137,11 @@ public class LibraryControl {
     }
 
     private enum Option {
-        EXIT(0,"wyjście z programu"),
-        ADD_BOOK(1,"dodanie nowej książki"),
-        ADD_MAGAZINE(2,"dodanie nowego magazynu"),
+        EXIT(0, "wyjście z programu"),
+        ADD_BOOK(1, "dodanie nowej książki"),
+        ADD_MAGAZINE(2, "dodanie nowego magazynu"),
         PRINT_BOOKS(3, "wyświetl dostępne książki"),
-        PRINT_MAGAZINES(4,"wyświetl dostępne magazyny");
+        PRINT_MAGAZINES(4, "wyświetl dostępne magazyny");
 
         private final int value;
         private final String description;
@@ -142,8 +168,7 @@ public class LibraryControl {
         static Option createFromInt(int option) throws NoSuchFieldException {
             try {
                 return Option.values()[option];
-            }catch(ArrayIndexOutOfBoundsException e)
-            {
+            } catch (ArrayIndexOutOfBoundsException e) {
                 throw new NoSuchFieldException("Brak opcji o id " + option);
             }
         }
